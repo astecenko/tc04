@@ -3,7 +3,9 @@ package ru.rostvertolplc.osapr.tc04.handlers;
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
+import org.eclipse.jface.dialogs.IMessageProvider;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.window.Window;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.handlers.HandlerUtil; //import java.net.*;
 
@@ -12,6 +14,7 @@ import com.teamcenter.rac.aifrcp.AIFUtility;
 import com.teamcenter.rac.kernel.*; //import com.teamcenter.rac.aif.kernel.AIFComponentContext;
 import com.teamcenter.rac.aif.kernel.InterfaceAIFComponent;
 import ru.rostvertolplc.osapr.helpers.*;
+import ru.rostvertolplc.osapr.tc04.dialogs.SelectDialog;
 
 /**
  * Our sample handler extends AbstractHandler, an IHandler base class.
@@ -35,13 +38,24 @@ public class MainHandler extends AbstractHandler {
 		return false;
 	}
 
-	public String GetNewObjName(TCComponentItem item, String[] typeList)
+	public String GetNewObjName(TCComponentItem item, String[] typeList, int renameType)
 			throws TCException {
 		TCComponent relatedComponent = item
 				.getRelatedComponent("IMAN_master_form");
-		return relatedComponent.getProperty("HR_NAME") + " "
+		switch (renameType) {
+			case 0:
+				return relatedComponent.getProperty("HR_NAME") + " "
 				+ relatedComponent.getProperty("HR48") + "-"
 				+ relatedComponent.getProperty("HR_OBOZN");
+			case 1:
+				return relatedComponent.getProperty("HR_NAME") + " "
+				+ relatedComponent.getProperty("HR_OBOZN") + "-"
+				+ relatedComponent.getProperty("HR48");
+			default:
+				return relatedComponent.getProperty("HR_NAME") + " "
+				+ relatedComponent.getProperty("HR48") + "-"
+				+ relatedComponent.getProperty("HR_OBOZN");				
+		}		
 	}
 
 	/**
@@ -70,10 +84,14 @@ public class MainHandler extends AbstractHandler {
 					// TODO: handle exception
 				}
 			}
-
-			if (MessageDialog.openConfirm(window.getShell(), "Teamcenter",
-					"Переименовать объекты в соответствие с атрибутами мастер-формы? \n"
-							+ s1.toString())) {
+			
+			SelectDialog myDialog = new SelectDialog(window.getShell(),
+					"Переименовать объекты в соответствие с атрибутами мастер-формы?",
+					s1.toString(),
+					new String[] { "ГОСТ/ОСТ", "Нормаль" },
+					IMessageProvider.INFORMATION);
+			int retVal = myDialog.open();
+			if (retVal == Window.OK) {	
 				String[] typeList = PreferenceHelper
 						.getPreferenceValueArray("RVT_TC04_TYPES");
 				if ((typeList == null) || (typeList.length == 0)) {
@@ -87,14 +105,14 @@ public class MainHandler extends AbstractHandler {
 							TCComponentItemRevision itemrev1 = (TCComponentItemRevision) c_target;
 							try {
 								newName = GetNewObjName(itemrev1.getItem(),
-										typeList);
+										typeList, myDialog.getSelectedIndex());
 							} catch (Exception e) {
 								// TODO: handle exception
 							}
 						} else if (c_target instanceof TCComponentItem) {
 							try {
 								newName = GetNewObjName(
-										(TCComponentItem) c_target, typeList);
+										(TCComponentItem) c_target, typeList, myDialog.getSelectedIndex());
 							} catch (Exception e) {
 								// TODO: handle exception
 							}
