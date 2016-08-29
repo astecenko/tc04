@@ -43,11 +43,11 @@ public class MainHandler extends AbstractHandler {
 		TCComponent relatedComponent = item
 				.getRelatedComponent("IMAN_master_form");
 		switch (renameType) {
-			case 0:
+			case 1:
 				return relatedComponent.getProperty("HR_NAME") + " "
 				+ relatedComponent.getProperty("HR48") + "-"
 				+ relatedComponent.getProperty("HR_OBOZN");
-			case 1:
+			case 0:
 				return relatedComponent.getProperty("HR_NAME") + " "
 				+ relatedComponent.getProperty("HR_OBOZN") + "-"
 				+ relatedComponent.getProperty("HR48");
